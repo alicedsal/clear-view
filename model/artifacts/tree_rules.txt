@@ -1,0 +1,55 @@
+|--- midterm_score <= 64.50
+|   |--- on_time_submission_rate <= 0.80
+|   |   |--- avg_days_started_before_exam <= 2.95
+|   |   |   |--- midterm_score <= 55.50
+|   |   |   |   |--- avg_weekly_study_hours <= 2.40
+|   |   |   |   |   |--- class: 1
+|   |   |   |   |--- avg_weekly_study_hours >  2.40
+|   |   |   |   |   |--- class: 1
+|   |   |   |--- midterm_score >  55.50
+|   |   |   |   |--- on_time_submission_rate <= 0.76
+|   |   |   |   |   |--- class: 1
+|   |   |   |   |--- on_time_submission_rate >  0.76
+|   |   |   |   |   |--- class: 1
+|   |   |--- avg_days_started_before_exam >  2.95
+|   |   |   |--- avg_weekly_study_hours <= 3.25
+|   |   |   |   |--- class: 1
+|   |   |   |--- avg_weekly_study_hours >  3.25
+|   |   |   |   |--- class: 0
+|   |--- on_time_submission_rate >  0.80
+|   |   |--- late_night_study_pct <= 0.37
+|   |   |   |--- avg_practice_quiz_score <= 67.15
+|   |   |   |   |--- avg_days_started_before_exam <= 2.85
+|   |   |   |   |   |--- class: 1
+|   |   |   |   |--- avg_days_started_before_exam >  2.85
+|   |   |   |   |   |--- class: 0
+|   |   |   |--- avg_practice_quiz_score >  67.15
+|   |   |   |   |--- attendance_rate <= 0.77
+|   |   |   |   |   |--- class: 1
+|   |   |   |   |--- attendance_rate >  0.77
+|   |   |   |   |   |--- class: 0
+|   |   |--- late_night_study_pct >  0.37
+|   |   |   |--- avg_practice_quiz_score <= 71.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- avg_practice_quiz_score >  71.50
+|   |   |   |   |--- class: 1
+|--- midterm_score >  64.50
+|   |--- attendance_rate <= 0.78
+|   |   |--- work_hours_per_week <= 1.00
+|   |   |   |--- class: 0
+|   |   |--- work_hours_per_week >  1.00
+|   |   |   |--- class: 1
+|   |--- attendance_rate >  0.78
+|   |   |--- on_time_submission_rate <= 0.72
+|   |   |   |--- class: 1
+|   |   |--- on_time_submission_rate >  0.72
+|   |   |   |--- late_night_study_pct <= 0.33
+|   |   |   |   |--- flashcards_reviewed <= 55.00
+|   |   |   |   |   |--- class: 0
+|   |   |   |   |--- flashcards_reviewed >  55.00
+|   |   |   |   |   |--- class: 0
+|   |   |   |--- late_night_study_pct >  0.33
+|   |   |   |   |--- on_time_submission_rate <= 0.86
+|   |   |   |   |   |--- class: 0
+|   |   |   |   |--- on_time_submission_rate >  0.86
+|   |   |   |   |   |--- class: 0
