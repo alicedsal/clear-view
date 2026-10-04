@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\api",
+    "\\data",
+    "\\model",
+    "\\model\\artifacts",
+    "\\public",
+    "\\src",
+    "\\src\\data",
+    "\\src\\pages"
+  ],
+  "SelectedNode": "\\data\\data_dictionary.csv",
+  "PreviewInSolutionExplorer": false
+}
