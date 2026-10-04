@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
-import { getStudent } from './api'
 import type { Prediction } from './api'
 import Model from './pages/Model'
 import Overview from './pages/Overview'
+import Progress from './pages/Progress'
 import StudyAid from './pages/StudyAid'
 import Support from './pages/Support'
+import { useStudent } from './student'
 
 // course materials (/materials) and duckie (/duckie) are hidden from the
 // sidebar until they have content; their routes still exist below
@@ -96,13 +97,6 @@ type Risk = Prediction['level']
 type Importance = 'critical' | 'high' | 'medium' | 'normal'
 type Week = { week: number; tasks: { label: string; importance: Importance }[] }
 
-// sample values; the course of the student in the header is replaced by the
-// model's result once the api answers
-const HEADER_STUDENT = "S1000"
-const courseRisk: Record<string, Risk> = {
-    "CSC 216": "some support",
-    "BIO 181": "on track"
-}
 
 const workload: Record<string, Week[]> = {
     "CSC 216": [
@@ -198,8 +192,8 @@ const riskText: Record<Risk, string> = {
 }
 
 const riskMessage: Record<Risk, string> = {
-    "extra support": "Extra support: start with the highlighted tasks",
-    "some support": "Some support: keep an eye on the highlighted tasks",
+    "extra support": "Extra support: this course could use extra help right now",
+    "some support": "Some support: a few habits could use attention",
     "on track": "On track: keep doing what works"
 }
 
@@ -207,16 +201,7 @@ const riskMessage: Record<Risk, string> = {
 export default function App() {
     const [sidebarWidth] = useState<number>(200)
     const [showWorkload, setShowWorkload] = useState<boolean>(false)
-    const [risk, setRisk] = useState(courseRisk)
-
-    useEffect(() => {
-        getStudent(HEADER_STUDENT)
-            .then((record) => {
-                const course = record.student.course
-                if (course) setRisk((prev) => ({ ...prev, [course]: record.prediction.level }))
-            })
-            .catch(() => {}) // api not running: keep the sample values
-    }, [])
+    const { id: studentId, record } = useStudent()
 
     return (
         <div className= "flex min-h-svh bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 relative" >
@@ -267,9 +252,25 @@ element = {
                             < div className = "p-2 flex flex-col gap-4" >
 
     <h2 className="text-xl font-bold mb-2" > My Courses </h2>
-        < p className = "text-sm text-zinc-500" >
-            Your registered course timeline will show up here.
-                                </p>
+        {record ? (
+    <>
+        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
+            <div className="flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${riskColor[record.prediction.level]}`}></span>
+                <h3 className="text-lg font-bold">{record.student.course}</h3>
+            </div>
+            <p className={`text-sm font-semibold mt-2 ${riskText[record.prediction.level]}`}>
+                {riskMessage[record.prediction.level]}
+            </p>
+            <p className="text-sm text-zinc-500 mt-1">
+                From the model, for student {studentId}. See the support check page for the reasons and next steps.
+            </p>
+        </div>
+        <Progress />
+    </>
+) : (
+    <p className="text-sm text-zinc-500">Loading your course…</p>
+)}
 
 {/* WORKLOAD CHART */ }
 <div className="mt-4" >
@@ -278,7 +279,7 @@ element = {
 className = "w-full flex items-center justify-between p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
     >
     <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300" >
-        Weekly Workload by Support Level
+        Weekly Workload (Example Plans)
             </span>
             < span className = "text-xl" > { showWorkload? "▲": "▼" } </span>
                 </button>
@@ -296,16 +297,16 @@ className = {`overflow-hidden transition-all duration-300 ${showWorkload ? "max-
             { course }
             </h3>
 
-        <p className={`text-sm font-semibold mb-2 ${riskText[risk[course]]}`}>
-    {riskMessage[risk[course]]}
-</p>
+        <p className="text-sm mb-2 text-zinc-500">
+            Example weekly plan. The dataset has semester totals, not weekly tasks.
+        </p>
 
     < div className = "relative border-l border-zinc-300 dark:border-zinc-700 pl-6 space-y-8" >
 
     {
         workload[course].map(week => (
             <div key= { week.week } >
-            <div className={`absolute -left-3 top-1 w-3 h-3 ${riskColor[risk[course]]
+            <div className={`absolute -left-3 top-1 w-3 h-3 ${'bg-zinc-400'
                 } rounded-full`} > </div>
 
         < h4 className = "font-semibold text-zinc-800 dark:text-zinc-200" >

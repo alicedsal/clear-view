@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useStudent } from '../student.tsx';
+import Progress, { StudentPicker } from './Progress.tsx';
 
 interface Task {
     id: string;
@@ -60,6 +62,7 @@ const defaultAvatar =
     );
 
 export default function Overview() {
+    const { id: studentId, record } = useStudent();
     const [selectedDay, setSelectedDay] = useState<number>(9);
     const [profilePic, setProfilePic] = useState<string>(defaultAvatar);
     const [activeBorder, setActiveBorder] = useState<string>('none');
@@ -138,14 +141,16 @@ onChange = {(e) => {
 {/* Student Credentials text info */ }
 <div className="flex flex-col" >
     <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white" >
-        Student ID: #S1000
+        Student ID: #{studentId}
             </h1>
             < p className = "text-sm font-semibold text-amber-500 dark:text-amber-400 mt-0.5" >
-                Classification: Sophomore Year
+                {record ? `Classification: ${record.student.class_year} Year · ${record.student.course}` : 'Loading student…'}
                     </p>
                     </div>
                     </div>
 
+<div className="flex flex-col items-start sm:items-end gap-2">
+<StudentPicker />
 {/* Custom border aesthetic controller options dropdown */ }
 <div className="flex items-center gap-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-2 w-fit" >
     <span className="font-bold text-slate-400" >✨ Avatar Border: </span>
@@ -161,6 +166,7 @@ className = "bg-transparent border-none p-0 focus:ring-0 focus:outline-none curs
 }
     </select>
     </div>
+</div>
     </div>
 
 {/* Quick Stats Grid View */ }
@@ -175,6 +181,8 @@ className = "bg-transparent border-none p-0 focus:ring-0 focus:outline-none curs
                         <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{examsAhead} Coming Up</p>
                             </div>
                             </div>
+
+<div className="mb-6"><Progress /></div>
 
 {/* Layout Grid Panels for Calendar and Deadlines list */ }
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" >

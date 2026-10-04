@@ -7,7 +7,15 @@ export type Student = {
   midterm_score: number
   course?: string
   class_year?: string
+  credit_hours?: number
   work_hours_per_week?: number
+  avg_weekly_study_hours?: number
+  study_sessions_logged?: number
+  materials_uploaded?: number
+  avg_practice_quiz_score?: number
+  flashcards_reviewed?: number
+  missed_deadlines?: number
+  avg_sleep_hours?: number
   practice_quizzes_taken?: number
   avg_days_started_before_exam?: number
   // rates are fractions: 0.85, not 85
@@ -90,7 +98,13 @@ export function studyAidFromFile(file: File, numQuestions = 5) {
   return request<StudyAid>('/ai/file', { method: 'POST', body: form })
 }
 
-export type StudentRecord = { student_id: string; student: Student; prediction: Prediction }
+export type StudentRecord = {
+  student_id: string
+  student: Student
+  prediction: Prediction
+  course_average: Record<string, number>
+  course_size: number
+}
 
 export const getStudent = (id: string) => request<StudentRecord>(`/students/${encodeURIComponent(id)}`)
 export const getMetrics = () => request<Metrics>('/metrics')

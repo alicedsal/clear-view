@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getOptions, getStudent, predict } from '../api.ts'
-import type { Options, Prediction, Student } from '../api.ts'
+import type { Options, Prediction, Student, StudentRecord } from '../api.ts'
+import { useStudent } from '../student.tsx'
 
 type Field = {
   key: keyof Student
@@ -35,7 +36,8 @@ function Support() {
   const [result, setResult] = useState<Prediction | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [studentId, setStudentId] = useState('S1000')
+  const current = useStudent()
+  const [studentId, setStudentId] = useState(current.id)
 
   useEffect(() => {
     getOptions().then(setOptions).catch((e: Error) => setError(e.message))
@@ -43,23 +45,31 @@ function Support() {
 
   const set = (key: string, value: string) => setValues((prev) => ({ ...prev, [key]: value }))
 
+  function fill(record: StudentRecord) {
+    const next: Record<string, string> = {
+      course: record.student.course ?? '',
+      class_year: record.student.class_year ?? '',
+    }
+    for (const field of fields) {
+      const value = record.student[field.key]
+      if (typeof value !== 'number') continue
+      next[field.key] = String(field.percent ? Math.round(value * 100) : value)
+    }
+    setValues(next)
+    setResult(record.prediction)
+  }
+
+  // open with the dashboard's student already filled in
+  useEffect(() => {
+    if (current.record) fill(current.record)
+  }, [current.record])
+
   // fill the form from a record in the wolfhacks dataset
   async function load() {
     setLoading(true)
     setError('')
     try {
-      const record = await getStudent(studentId)
-      const next: Record<string, string> = {
-        course: record.student.course ?? '',
-        class_year: record.student.class_year ?? '',
-      }
-      for (const field of fields) {
-        const value = record.student[field.key]
-        if (typeof value !== 'number') continue
-        next[field.key] = String(field.percent ? Math.round(value * 100) : value)
-      }
-      setValues(next)
-      setResult(record.prediction)
+      fill(await getStudent(studentId))
     } catch (e) {
       setError((e as Error).message)
     } finally {

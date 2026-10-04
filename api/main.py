@@ -50,6 +50,8 @@ def _load_students() -> pd.DataFrame:
 
 
 STUDENTS = _load_students()
+COURSE_AVERAGES = STUDENTS.groupby("course").mean(numeric_only=True).round(2)
+COURSE_SIZES = STUDENTS["course"].value_counts()
 
 app = FastAPI(title="clear view api")
 app.add_middleware(
@@ -171,6 +173,9 @@ def student(student_id: str) -> dict:
         "student_id": key,
         "student": record.model_dump(exclude_none=True),
         "prediction": predict(record),
+        # how the other students in the same course are doing, for context
+        "course_average": COURSE_AVERAGES.loc[record.course].to_dict(),
+        "course_size": int(COURSE_SIZES[record.course]),
     }
 
 
