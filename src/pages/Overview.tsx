@@ -117,7 +117,7 @@ className = "bg-transparent border-none p-0 focus:ring-0 focus:outline-none curs
             <h2 className="text-xl font-bold" > October 2026 </h2>
                 </div>
                 < div className = "grid grid-cols-7 text-center font-semibold text-xs text-slate-400 mb-2" >
-                    <div>Sun < /div><div>Mon</div > <div>Tue < /div><div>Wed</div > <div>Thu < /div><div>Fri</div > <div>Sat </div>
+                    <div>Sun </div><div>Mon</div > <div>Tue </div><div>Wed</div > <div>Thu </div><div>Fri</div > <div>Sat </div>
                     </div>
                     < div className = "grid grid-cols-7 gap-1" >
                     { Array.from({ length: 4 }).map((_, i) => <div key={ i } className = "h-12" />) }

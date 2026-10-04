@@ -26,7 +26,14 @@ from api.explain import explain  # noqa: E402
 
 ARTIFACTS = ROOT / "model" / "artifacts"
 CLASS_YEARS = {"Freshman": 1, "Sophomore": 2, "Junior": 3, "Senior": 4}
-FILE_TYPES = {"application/pdf", "text/plain", "text/markdown"}
+FILE_TYPES = {
+    ".pdf": "application/pdf",
+    ".txt": "text/plain",
+    ".md": "text/plain",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 
 saved = joblib.load(ARTIFACTS / "tree.joblib")
@@ -34,6 +41,15 @@ MODEL, THRESHOLD = saved["model"], saved["threshold"]
 METRICS = json.loads((ARTIFACTS / "metrics.json").read_text())
 FEATURES: list[str] = METRICS["features"]
 COURSES = [name.removeprefix("course_") for name in FEATURES if name.startswith("course_")]
+
+def _load_students() -> pd.DataFrame:
+    df = pd.read_csv(ROOT / "data" / "student_outcomes.csv").set_index("student_id")
+    for col in ("on_time_submission_rate", "late_night_study_pct", "attendance_rate"):
+        df[col] = df[col].str.rstrip("%").astype(float) / 100
+    return df.drop(columns=["at_risk"])
+
+
+STUDENTS = _load_students()
 
 app = FastAPI(title="clear view api")
 app.add_middleware(
@@ -143,6 +159,21 @@ def predict(student: Student) -> Prediction:
     )
 
 
+@app.get("/students/{student_id}")
+def student(student_id: str) -> dict:
+    """one record from the wolfhacks dataset, with the model's result for it.
+    the true outcome column is never sent to the browser."""
+    key = student_id.strip().upper()
+    if key not in STUDENTS.index:
+        raise HTTPException(404, "no student with that id. try S1000 to S1799")
+    record = Student(**{k: v for k, v in STUDENTS.loc[key].items() if pd.notna(v)})
+    return {
+        "student_id": key,
+        "student": record.model_dump(exclude_none=True),
+        "prediction": predict(record),
+    }
+
+
 @app.get("/metrics")
 def metrics() -> dict:
     """everything the "how the model works" page shows. the tree picture is
@@ -159,12 +190,14 @@ def study_aid(notes: Notes) -> ai.StudyAid:
 async def study_aid_from_file(
     file: UploadFile = File(...), num_questions: int = Form(default=5, ge=1, le=10)
 ) -> ai.StudyAid:
-    if file.content_type not in FILE_TYPES:
-        raise HTTPException(415, "upload a pdf, .txt or .md file")
+    # go by the file extension: browsers don't always send a content type
+    mime_type = FILE_TYPES.get(Path(file.filename or "").suffix.lower())
+    if not mime_type:
+        raise HTTPException(415, "upload a pdf, image, .txt or .md file")
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "file is larger than 15 mb")
-    return _ask(lambda: ai.from_file(data, file.content_type, num_questions))
+    return _ask(lambda: ai.from_file(data, mime_type, num_questions))
 
 
 def _ask(call):

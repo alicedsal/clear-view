@@ -42,6 +42,7 @@ copy `.env.example` to `.env` and add a gemini api key before using the ai endpo
 - `POST /predict` — a student's numbers in, support level, reasons, strengths and next steps out
 - `POST /ai` — notes as text in, summary, key points and a practice quiz out
 - `POST /ai/file` — the same from an uploaded pdf or text file
+- `GET /students/{id}` — one record from the dataset with the model's result, used by the support check page
 - `GET /metrics` — model evaluation numbers for the "how the model works" page
 - `GET /options` — course and class year choices for the risk form
 

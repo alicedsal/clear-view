@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
+import Model from './pages/Model'
 import Overview from './pages/Overview'
+import StudyAid from './pages/StudyAid'
+import Support from './pages/Support'
 
 const links = [
     { to: '/', label: 'overview' },
@@ -8,7 +11,8 @@ const links = [
     { to: '/materials', label: 'course materials' },
     { to: '/notes', label: 'notes' },
     { to: '/duckie', label: 'duckie 🦆' },
-    { to: '/details', label: 'details' },
+    { to: '/support', label: 'support check' },
+    { to: '/model', label: 'how the model works' },
 ]
 
 /* NOTES PAGE */
@@ -33,7 +37,7 @@ function NotesPage() {
                             Upload Notes
                                 </span>
                                 < span className = "text-sm text-zinc-500 dark:text-zinc-400" >
-                                    Click to upload PDFs, images, docs, or text files
+                                    Click to upload PDFs, images, or text files
                                         </span>
 
                                         < input type = "file" multiple className = "hidden" onChange = { handleUpload } />
@@ -51,8 +55,9 @@ function NotesPage() {
                 uploadedNotes.map((file, index) => (
                     <li
                                 key= { index }
-                                className = "p-3 border border-zinc-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 flex justify-between items-center"
+                                className = "p-3 border border-zinc-200 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900"
                     >
+                    <div className="flex justify-between items-center">
                     <div>
                     <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200" >
                     { file.name }
@@ -70,6 +75,8 @@ function NotesPage() {
             >
             Open
             </a>
+            </div>
+            <StudyAid file={file} />
             </li>
                         ))
     }
@@ -82,12 +89,16 @@ function NotesPage() {
 }
 
 /* COURSE RISK + WORKLOAD DATA */
-const courseRisk = {
+type Risk = 'fail' | 'risk' | 'pass'
+type Importance = 'critical' | 'high' | 'medium' | 'normal'
+type Week = { week: number; tasks: { label: string; importance: Importance }[] }
+
+const courseRisk: Record<string, Risk> = {
     "CSC 216": "fail",
     "BIO 181": "risk"
 }
 
-const workload = {
+const workload: Record<string, Week[]> = {
     "CSC 216": [
         {
             week: 1,
@@ -161,14 +172,14 @@ const workload = {
     ]
 }
 
-const importanceColor = {
+const importanceColor: Record<Importance, string> = {
     critical: "text-red-500 font-semibold",
     high: "text-yellow-500 font-semibold",
     medium: "text-blue-500",
     normal: "text-zinc-500"
 }
 
-const riskColor = {
+const riskColor: Record<Risk, string> = {
     fail: "bg-red-500",
     risk: "bg-yellow-500",
     pass: "bg-green-500"
@@ -176,7 +187,7 @@ const riskColor = {
 
 /* MAIN APP */
 export default function App() {
-    const [sidebarWidth, setSidebarWidth] = useState<number>(200)
+    const [sidebarWidth] = useState<number>(200)
     const [showWorkload, setShowWorkload] = useState<boolean>(false)
 
     return (
@@ -327,7 +338,8 @@ element = {
                         }
                     />
 
-    < Route path = "/details" element = {< p className = "text-sm text-zinc-500" > nothing here yet < /p>} / >
+    <Route path="/support" element={<Support />} />
+<Route path="/model" element={<Model />} />
 
         </Routes>
         </main>
