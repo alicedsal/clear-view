@@ -7,12 +7,12 @@ import Overview from './pages/Overview'
 import StudyAid from './pages/StudyAid'
 import Support from './pages/Support'
 
+// course materials (/materials) and duckie (/duckie) are hidden from the
+// sidebar until they have content; their routes still exist below
 const links = [
     { to: '/', label: 'overview' },
     { to: '/courses', label: 'courses' },
-    { to: '/materials', label: 'course materials' },
     { to: '/notes', label: 'notes' },
-    { to: '/duckie', label: 'duckie 🦆' },
     { to: '/support', label: 'support check' },
     { to: '/model', label: 'how the model works' },
 ]

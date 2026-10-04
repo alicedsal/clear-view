@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Task {
     id: string;
@@ -6,6 +6,42 @@ interface Task {
     course: string;
     priority: 'High' | 'Medium' | 'Low';
     completed: boolean;
+    exam?: boolean;
+}
+
+type TaskList = Record<number, Task[]>;
+
+const STORAGE_KEY = 'clear-view-deadlines';
+const DUE_SOON_DAYS = 7;
+
+// shown the first time the app opens; after that the student's own list is kept in the browser
+const sampleTasks: TaskList = {
+    9: [
+        { id: '1', title: 'Computer Science Project', course: 'CSC 216', priority: 'High', completed: false },
+        { id: '2', title: 'Read Chapter 4 Frameworks', course: 'CSC 216', priority: 'Low', completed: true },
+    ],
+    11: [
+        { id: '3', title: 'Biology 111 Lab Report', course: 'BIO 181', priority: 'Medium', completed: false },
+    ],
+    14: [
+        { id: '4', title: 'BIO 181 Midterm', course: 'BIO 181', priority: 'High', completed: false, exam: true },
+    ],
+};
+
+function loadTasks(): TaskList {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+    } catch {
+        // storage blocked or corrupted: fall back to the samples
+    }
+    return sampleTasks;
+}
+
+// the calendar shows october 2026; outside that month, count from the 1st
+function firstUpcomingDay(): number {
+    const now = new Date();
+    return now.getFullYear() === 2026 && now.getMonth() === 9 ? now.getDate() : 1;
 }
 
 // Border configuration styles
@@ -28,15 +64,37 @@ export default function Overview() {
     const [profilePic, setProfilePic] = useState<string>(defaultAvatar);
     const [activeBorder, setActiveBorder] = useState<string>('none');
 
-    const [taskList, setTaskList] = useState<Record<number, Task[]>>({
-        9: [
-            { id: '1', title: 'Computer Science Project', course: 'CSC 216', priority: 'High', completed: false },
-            { id: '2', title: 'Read Chapter 4 Frameworks', course: 'CSC 216', priority: 'Low', completed: true },
-        ],
-        11: [
-            { id: '3', title: 'Biology 111 Lab Report', course: 'BIO 181', priority: 'Medium', completed: false },
-        ],
-    });
+    const [taskList, setTaskList] = useState<TaskList>(loadTasks);
+    const [draft, setDraft] = useState({ title: '', course: '', priority: 'Medium' as Task['priority'], exam: false });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(taskList));
+        } catch {
+            // nothing to do: the list still works for this visit
+        }
+    }, [taskList]);
+
+    const addTask = (e: React.FormEvent) => {
+        e.preventDefault();
+        const title = draft.title.trim();
+        if (!title) return;
+        const task: Task = { id: crypto.randomUUID(), title, course: draft.course.trim() || 'General', priority: draft.priority, completed: false, exam: draft.exam };
+        setTaskList((prev) => ({ ...prev, [selectedDay]: [...(prev[selectedDay] || []), task] }));
+        setDraft({ title: '', course: '', priority: 'Medium', exam: false });
+    };
+
+    const removeTask = (day: number, taskId: string) => {
+        setTaskList((prev) => ({ ...prev, [day]: prev[day].filter((t) => t.id !== taskId) }));
+    };
+
+    const today = firstUpcomingDay();
+    const open = Object.entries(taskList).flatMap(([day, tasks]) =>
+        tasks.filter((t) => !t.completed).map((t) => ({ ...t, day: Number(day) })),
+    );
+    const dueSoon = open.filter((t) => t.day >= today && t.day <= today + DUE_SOON_DAYS).length;
+    const examsAhead = open.filter((t) => t.exam && t.day >= today).length;
+    const daysWithOpenTasks = new Set(open.map((t) => t.day));
 
     const toggleTask = (day: number, taskId: string) => {
         setTaskList((prev) => ({
@@ -109,11 +167,12 @@ className = "bg-transparent border-none p-0 focus:ring-0 focus:outline-none curs
 <div className="flex gap-4 mb-6" >
     <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg flex-1" >
         <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400" > Due Soon </h3>
-            < p className = "text-2xl font-bold mt-1" > 3 Tasks </p>
+            <p className="text-2xl font-bold mt-1">{dueSoon} {dueSoon === 1 ? "Task" : "Tasks"}</p>
+<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">in the next {DUE_SOON_DAYS} days</p>
                 </div>
                 < div className = "bg-red-50 dark:bg-red-950/30 p-4 rounded-lg flex-1" >
                     <h3 className="text-sm font-medium text-red-700 dark:text-red-300" > Exams </h3>
-                        < p className = "text-2xl font-bold text-red-600 dark:text-red-400 mt-1" > 1 Coming Up </p>
+                        <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{examsAhead} Coming Up</p>
                             </div>
                             </div>
 
@@ -137,13 +196,14 @@ className = {`h-12 rounded-md flex flex-col items-center justify-center border t
     }`}
               >
 { day }
+{daysWithOpenTasks.has(day) && <span className={`h-1.5 w-1.5 rounded-full ${selectedDay === day ? "bg-white" : "bg-amber-500"}`} />}
     </button>
             ))}
 </div>
     </div>
 
     < div className = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-lg shadow-sm" >
-        <h2 className="text-xl font-bold mb-4" > Deadlines </h2>
+        <h2 className="text-xl font-bold mb-4">Deadlines · Oct {selectedDay}</h2>
 {
     activeTasks.length === 0 ? (
         <div className= "text-center py-12 text-sm text-slate-400" >✨ No assignments due! </div>
@@ -160,13 +220,52 @@ className = {`h-12 rounded-md flex flex-col items-center justify-center border t
         />
         <div>
         <p className={ `text-sm font-medium ${task.completed ? 'line-through text-slate-400' : ''}` }> { task.title } </p>
-            < p className = "text-xs text-slate-400 mt-0.5" > { task.course } • { task.priority } Priority </p>
+            < p className = "text-xs text-slate-400 mt-0.5" > { task.course } • { task.priority } Priority{task.exam ? ' • Exam' : ''} </p>
                 </div>
+                <button onClick={() => removeTask(selectedDay, task.id)} aria-label={`Remove ${task.title}`} className="ml-auto text-slate-400 hover:text-red-500 text-sm px-1">✕</button>
                 </li>
               ))
 }
 </ul>
           )}
+<form onSubmit={addTask} className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+    <h3 className="text-sm font-semibold">Add a deadline for Oct {selectedDay}</h3>
+    <input
+        required
+        aria-label="Title"
+        placeholder="Title"
+        value={draft.title}
+        onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+        className="rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm"
+    />
+    <div className="flex gap-2">
+        <input
+            aria-label="Course"
+            placeholder="Course"
+            value={draft.course}
+            onChange={(e) => setDraft({ ...draft, course: e.target.value })}
+            className="min-w-0 flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm"
+        />
+        <select
+            aria-label="Priority"
+            value={draft.priority}
+            onChange={(e) => setDraft({ ...draft, priority: e.target.value as Task['priority'] })}
+            className="rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-2 py-2 text-sm"
+        >
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+        </select>
+    </div>
+    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+        <input type="checkbox" checked={draft.exam} onChange={(e) => setDraft({ ...draft, exam: e.target.checked })} className="accent-amber-500 h-4 w-4" />
+        This is an exam
+    </label>
+    <button type="submit" className="rounded-md bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-3 py-2">
+        Add deadline
+    </button>
+</form>
+
 </div>
     </div>
 
