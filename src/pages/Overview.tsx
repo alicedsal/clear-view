@@ -16,9 +16,16 @@ const borderStyles = [
     { id: 'chains', label: '⛓️ Chains', class: 'border-slate-400 [border-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://w3.org\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><text y=\'18\' font-size=\'16\'>⛓️</text></svg>")]_10_repeat]' },
 ];
 
+// neutral placeholder shown until the student uploads a picture
+const defaultAvatar =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#e2e8f0"/><circle cx="40" cy="31" r="14" fill="#94a3b8"/><path d="M12 80c2-18 14-27 28-27s26 9 28 27z" fill="#94a3b8"/></svg>'
+    );
+
 export default function Overview() {
     const [selectedDay, setSelectedDay] = useState<number>(9);
-    const [profilePic, setProfilePic] = useState<string>('https://unsplash.com');
+    const [profilePic, setProfilePic] = useState<string>(defaultAvatar);
     const [activeBorder, setActiveBorder] = useState<string>('none');
 
     const [taskList, setTaskList] = useState<Record<number, Task[]>>({
