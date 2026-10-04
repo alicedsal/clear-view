@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getOptions, getStudent, predict } from '../api.ts'
 import type { Options, Prediction, Student, StudentRecord } from '../api.ts'
 import { useStudent } from '../student.tsx'
@@ -197,6 +198,17 @@ function Support() {
                 <p className="mt-2 text-sm">{result.message}</p>
               </div>
               <ResultList title="next steps" items={result.actions} />
+              {result.actions.length > 0 && (
+                <p className="text-sm">
+                  <Link to="/resources" className="font-semibold text-amber-600 hover:underline dark:text-amber-400">
+                    find campus support →
+                  </Link>{' '}
+                  or{' '}
+                  <Link to="/duckie" className="font-semibold text-amber-600 hover:underline dark:text-amber-400">
+                    talk it through with spookie →
+                  </Link>
+                </p>
+              )}
               <ResultList title="what to work on" items={result.reasons} />
               <ResultList title="what is going well" items={result.strengths} />
             </>

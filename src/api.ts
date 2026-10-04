@@ -109,3 +109,14 @@ export type StudentRecord = {
 export const getStudent = (id: string) => request<StudentRecord>(`/students/${encodeURIComponent(id)}`)
 export const getMetrics = () => request<Metrics>('/metrics')
 export const getOptions = () => request<Options>('/options')
+
+export type DuckMessage = { who: 'student' | 'duck'; text: string }
+
+export async function askDuck(messages: DuckMessage[], studentId?: string) {
+  const body = await request<{ reply: string }>('/duck', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, student_id: studentId }),
+  })
+  return body.reply
+}

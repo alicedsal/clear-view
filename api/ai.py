@@ -82,3 +82,44 @@ def from_text(text: str, num_questions: int = 5) -> StudyAid:
 
 def from_file(data: bytes, mime_type: str, num_questions: int = 5) -> StudyAid:
     return _generate(types.Part.from_bytes(data=data, mime_type=mime_type), num_questions)
+
+
+DUCK = """you are spookie, a small rubber duck in a witch hat who lives in a magic pond inside a
+student dashboard. you do rubber-duck debugging for academic challenges: the student talks through
+what is going wrong in a course and you help them think it through.
+
+how you talk:
+- warm, a little playful, a little magical. never mocking. write in lowercase.
+- keep every reply under 80 words.
+- ask one short question at a time and reflect back what you heard.
+- end with one small, concrete next step the student could do today.
+- you believe the student can pass this class. say so, and say why, based on what they tell you.
+
+limits:
+- help them plan and understand; do not write their assignments for them.
+- you are not a counsellor. if the student says they are in crisis or unsafe, tell them kindly to
+  contact campus counselling or emergency services right away.
+- you only know what is in this conversation and the notes below. do not invent grades or facts."""
+
+
+def duck_reply(messages: list[tuple[str, str]], context: str) -> str:
+    """messages are (who, text) pairs, who is "student" or "duck"."""
+    contents = [
+        types.Content(
+            role="user" if who == "student" else "model",
+            parts=[types.Part.from_text(text=text)],
+        )
+        for who, text in messages
+    ]
+    for attempt in range(RETRIES + 1):
+        try:
+            response = _client().models.generate_content(
+                model=MODEL,
+                contents=contents,
+                config=types.GenerateContentConfig(system_instruction=DUCK + chr(10) * 2 + context),
+            )
+            return (response.text or "").strip()
+        except errors.ServerError:
+            if attempt == RETRIES:
+                raise
+            time.sleep(2 * (attempt + 1))

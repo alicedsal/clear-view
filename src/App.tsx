@@ -1,19 +1,22 @@
 import { useState } from 'react'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import type { Prediction } from './api'
+import CursorTrail from './CursorTrail'
+import Duck from './pages/Duck'
 import Model from './pages/Model'
 import Overview from './pages/Overview'
 import Progress from './pages/Progress'
+import Resources from './pages/Resources'
 import StudyAid from './pages/StudyAid'
 import Support from './pages/Support'
 import { useStudent } from './student'
 
-// course materials (/materials) and duckie (/duckie) are hidden from the
-// sidebar until they have content; their routes still exist below
 const links = [
     { to: '/', label: 'overview' },
     { to: '/courses', label: 'courses' },
     { to: '/notes', label: 'notes' },
+    { to: '/duckie', label: 'spookie duck 🦆' },
+    { to: '/resources', label: 'resources' },
     { to: '/support', label: 'support check' },
     { to: '/model', label: 'how the model works' },
 ]
@@ -237,6 +240,7 @@ style = {{ fontFamily: "'Quincy', 'Quincy CF', 'Georgia', serif" }}
             </NavLink>
                     ))}
 </nav>
+<CursorTrail />
     </aside>
 
 {/* MAIN VIEWPORT */ }
@@ -340,25 +344,9 @@ className = {`overflow-hidden transition-all duration-300 ${showWorkload ? "max-
 <Route path="/notes" element = {< NotesPage />} />
 
 {/* OTHER ROUTES */ }
-<Route
-                        path="/materials"
-element = {
-                            < div className = "p-2" >
-    <h2 className="text-xl font-bold mb-2" > Course Materials </h2>
-        < p className = "text-sm text-zinc-500" > Access your syllabus and resource documentation links.</p>
-            </div>
-                        }
-                    />
+<Route path="/resources" element={<Resources />} />
 
-    < Route
-path = "/duckie"
-element = {
-                            < div className = "p-2 flex flex-col gap-2" >
-    <h2 className="text-xl font-bold" > Rubber Duck Debugging 🦆</h2>
-        < p className = "text-sm text-zinc-500" > Troubleshoot tricky script blocks line - by - line with the duck! </p>
-            </div>
-                        }
-                    />
+    <Route path="/duckie" element={<Duck />} />
 
     <Route path="/support" element={<Support />} />
 <Route path="/model" element={<Model />} />

@@ -8,3 +8,29 @@
 body {
   margin: 0;
 }
+
+/* spookie's pond */
+@keyframes pond-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes pond-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+
+.pond-spark {
+  animation: pond-twinkle 2.8s ease-in-out infinite;
+}
+
+.pond-duck {
+  animation: pond-bob 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pond-spark,
+  .pond-duck {
+    animation: none;
+  }
+}

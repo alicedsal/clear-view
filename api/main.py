@@ -102,6 +102,16 @@ class Notes(BaseModel):
     num_questions: int = Field(default=5, ge=1, le=10)
 
 
+class DuckMessage(BaseModel):
+    who: Literal["student", "duck"]
+    text: str = Field(min_length=1, max_length=2000)
+
+
+class DuckChat(BaseModel):
+    messages: list[DuckMessage] = Field(min_length=1, max_length=40)
+    student_id: str | None = None
+
+
 MESSAGES = {
     "on track": "you look on track in this course. keep doing what's working.",
     "some support": "a few habits could use attention. small changes now make a real difference.",
@@ -203,6 +213,26 @@ async def study_aid_from_file(
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "file is larger than 15 mb")
     return _ask(lambda: ai.from_file(data, mime_type, num_questions))
+
+
+@app.post("/duck")
+def duck(chat: DuckChat) -> dict:
+    """spookie the duck: talk through an academic problem. the duck is told
+    what the model sees for this student, so its advice matches the dashboard."""
+    context = "nothing is known about this student yet."
+    key = (chat.student_id or "").strip().upper()
+    if key in STUDENTS.index:
+        record = Student(**{k: v for k, v in STUDENTS.loc[key].items() if pd.notna(v)})
+        result = predict(record)
+        context = (
+            f"what the dashboard shows for this student in {record.course}: "
+            f"support level: {result.level}. "
+            f"things to work on: {'; '.join(result.reasons) or 'none flagged'}. "
+            f"things going well: {'; '.join(result.strengths) or 'not listed'}. "
+            f"suggested next steps: {'; '.join(result.actions) or 'none'}."
+        )
+    recent = [(message.who, message.text) for message in chat.messages[-12:]]
+    return {"reply": _ask(lambda: ai.duck_reply(recent, context))}
 
 
 def _ask(call):
